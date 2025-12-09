@@ -1,0 +1,60 @@
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+platform :ios, '13.0'
+install! 'cocoapods', :deterministic_uuids => false
+
+target 'AlbumExplorer' do
+  # Loads React Native community modules configuration
+  config = use_native_modules!
+
+  # Flags change depending on the env values.
+  flags = get_default_flags()
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => true,
+    :fabric_enabled => flags[:fabric_enabled],
+    # Flipper is enabled here
+    :flipper_configuration => FlipperConfiguration.enabled,
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+  
+  target 'AlbumExplorerTests' do
+    inherit! :complete
+    # Pods for testing
+  end
+
+  # --- POST-INSTALL HOOKS START ---
+  post_install do |installer|
+    # React Native essential post-install steps
+    react_native_post_install(
+      installer,
+      :mac_catalyst_enabled => false
+    )
+    
+    # Legacy workaround for specific Xcode/M1 issues (can be left here)
+    __apply_Xcode_12_5_M1_post_install_workaround(installer)
+    
+    # 👇 FLIPPER XCODE 15.3+ COMPATIBILITY FIX
+    # This block injects #include <functional> into the Flipper header
+    # to resolve the "is not a function or function pointer" C++ error.
+    installer.pods_project.targets.each do |target|
+      if target.name == 'Flipper'
+        file_path = 'Pods/Flipper/xplat/Flipper/FlipperTransportTypes.h'
+        if File.exist?(file_path)
+          contents = File.read(file_path)
+          unless contents.include?('#include <functional>')
+            # Temporarily make the file writable to apply the patch
+            File.chmod(0755, file_path)
+            File.open(file_path, 'w') do |file|
+              file.puts('#include <functional>')
+              file.puts(contents)
+            end
+          end
+        end
+      end
+    end
+    # 👆 FLIPPER XCODE 15.3+ COMPATIBILITY FIX END
+  end
+  # --- POST-INSTALL HOOKS END ---
+end
