@@ -2,19 +2,22 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, Dimensions,TouchableOpacity } from 'react-native';
 import { IAlbumListItem } from '../models/Album';
 
-// Get screen width for responsive sizing
 const screenWidth = Dimensions.get('window').width;
 
 interface AlbumCardProps {
   album: IAlbumListItem;
+  onPress: (id: any) => void;
 
 }
 
-const AlbumCard: React.FC<AlbumCardProps> = ({ album, }) => {
+const AlbumCard: React.FC<AlbumCardProps> = ({ album,onPress }) => {
   return (
    
     <View style={styles.card}>
-    
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={() => onPress(album)}
+    >
       <Image source={{ uri: album.imageUrl }} style={styles.thumbnail} />
       <View style={styles.infoContainer}>
         <Text style={styles.title} numberOfLines={2}>
@@ -25,7 +28,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, }) => {
           {album.genre} • {new Date(album.releaseDate).getFullYear()}
         </Text>
       </View>
-   
+   </TouchableOpacity>
       
     </View>
 
@@ -39,7 +42,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    // Calculate card width for tablets/landscape
     width: screenWidth > 600 ? '50%' : '100%', 
   },
   thumbnail: {

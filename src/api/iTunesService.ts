@@ -1,11 +1,9 @@
 import { IiTunesResponse, ITrack, IAlbumListItem } from '../models/Album';
 
-// The API endpoint required by the project specifications
+
 const ITUNES_SEARCH_URL = 'https://itunes.apple.com/search?term=jack+johnson';
 
-/**
- * Fetches TRACK data for "Jack Johnson" from the iTunes Search API.
- */
+
 export const fetchAlbums = async (): Promise<IAlbumListItem[]> => {
   try {
     const response = await fetch(ITUNES_SEARCH_URL);
@@ -16,28 +14,33 @@ export const fetchAlbums = async (): Promise<IAlbumListItem[]> => {
 
     const data: IiTunesResponse = await response.json();
 
-    // 1. Filter the results to only include TRACK types (as requested)
-    const tracks = data.results.filter(
-      (item): item is ITrack => item.wrapperType === 'audiobook'
-    );
+ 
+    const rawItems = data.results;
 
-    // 2. Map the complex API track data into our simplified IAlbumListItem model
-    const trackListItems: IAlbumListItem[] = tracks.map((track) => ({
-      // Using trackId
-      id: track.trackId, 
-      // Using trackName
-      title: track.trackName, 
-      artist: track.artistName,
-      imageUrl: track.artworkUrl100.replace('100x100bb', '600x600bb'),
-      // Using kind (e.g., 'song', 'feature-movie') for genre, as primaryGenreName might be missing on some tracks
-      genre: (track as any).primaryGenreName || track.kind || 'Unknown', 
-      releaseDate: (track as any).releaseDate || 'N/A',
-    }));
 
-    return trackListItems;
+    const albumListItems: IAlbumListItem[] = rawItems.map((item: any) => {
+      const isTrack = item.wrapperType === 'track';
+      
+
+      const id = item.trackId ?? item.collectionId;
+      const title = item.trackName ?? item.collectionName;
+
+      return { 
+        id: id, 
+        title: title, 
+        artist: item.artistName || 'Unknown Artist',
+        // Get higher resolution image, safely checking for 'artworkUrl100'
+        imageUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '600x600bb') : '',
+        // Use primaryGenreName, falling back to 'kind' (e.g., 'song')
+        genre: item.primaryGenreName || item.kind || 'Unknown', 
+        releaseDate: item.releaseDate || 'N/A',
+      };
+    });
+
+    return albumListItems;
 
   } catch (error) {
-    console.error('Failed to fetch tracks:', error);
-    throw new Error('Could not retrieve track data from the network.');
+   // console.error('Failed to fetch items:', error);
+    throw new Error('Could not retrieve item data from the network.');
   }
 };

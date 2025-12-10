@@ -12,47 +12,40 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useAlbumData } from '../hooks/useAlbumData';
 import AlbumCard from '../components/AlbumCard';
 import { IAlbumListItem } from '../models/Album';
-import { COLORS } from '../constants/styles'; // Assuming you created this constant file
+import { COLORS } from '../constants/styles'; 
 
-// --- 1. Define Navigation Types ---
-// Define the parameters for each screen in your stack
 type RootStackParamList = {
   Home: undefined;
-  Details: { trackId: number }; // Pass the track ID to the Details screen
+  Details: { trackId: any }; 
 };
-// Specify the navigation prop type for the Home screen
-type HomeNavigationProp = NavigationProp<RootStackParamList, 'Home'>;
-// --- End Navigation Types ---
 
-// Constants for layout
+type HomeNavigationProp = NavigationProp<RootStackParamList, 'Home'>;
+
 const screenWidth = Dimensions.get('window').width;
-const MIN_COLUMN_WIDTH = 180; // Minimum width for a comfortable card display
+const MIN_COLUMN_WIDTH = 180;
 const PADDING = 20;
 
 const HomeScreen: React.FC = () => {
   const { albums, isLoading, error } = useAlbumData();
-  const navigation = useNavigation<HomeNavigationProp>(); // Hook into navigation
+  const navigation = useNavigation(); 
 
-  // --- 2. Calculate Responsive Layout ---
-  // Calculates the number of columns based on screen width
   const numColumns = Math.floor((screenWidth - PADDING * 2) / MIN_COLUMN_WIDTH);
   const horizontalPadding = PADDING / 2;
   const listPadding = PADDING - horizontalPadding;
 
-  // --- 3. Navigation Handler ---
-  // Function called when an AlbumCard is pressed
-  const handleCardPress = (id: number) => {
-    // Navigate to the 'Details' screen and pass the track ID as a parameter
-    navigation.navigate('Details', { trackId: id });
+
+  const handleCardPress = (item: any) => {
+
+    navigation.navigate('Details', { trackId: item });
   };
 
-  // --- 4. Render Functions ---
+ 
   const renderItem = ({ item }: { item: IAlbumListItem }) => (
     <AlbumCard 
       album={item} 
-      // Pass the calculated number of columns for width calculation inside the card
+      
       numColumns={numColumns} 
-      onPress={handleCardPress} // Pass the navigation handler
+      onPress={handleCardPress} 
     />
   );
 
@@ -79,13 +72,13 @@ const HomeScreen: React.FC = () => {
       );
     }
     
-    // Display albums if data exists, even if there's an error (graceful failure)
+
     return (
       <FlatList
         data={albums}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        key={numColumns} // Key change forces re-render when columns change
+        key={numColumns} 
         numColumns={numColumns}
         contentContainerStyle={[styles.list, { paddingHorizontal: listPadding }]}
         ListHeaderComponent={() => (
@@ -97,7 +90,7 @@ const HomeScreen: React.FC = () => {
                 </Text>
               </View>
             )}
-            {/* Optional search or header component goes here */}
+            
           </>
         )}
       />

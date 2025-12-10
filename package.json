@@ -12,12 +12,11 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/netinfo": "^11.4.1",
-    "@react-navigation/native": "^7.1.25",
-    "@react-navigation/native-stack": "^7.8.6",
+    "@react-navigation/native-stack": "^6.11.0",
     "react": "18.1.0",
     "react-native": "0.70.10",
     "react-native-safe-area-context": "^5.6.2",
-    "react-native-screens": "^4.18.0"
+    "react-native-screens": "^3.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
@@ -39,6 +38,15 @@
   },
   "jest": {
     "preset": "react-native",
+    "setupFiles": [
+    "./__mocks__/fileMock.js" 
+  ],"transformIgnorePatterns": [
+    "node_modules/(?!(jest-)?react-native|@react-native|@react-navigation|@react-native-community|expo(nent)?|@expo(nent)?/.*|react-navigation|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+  ],
+  "moduleNameMapper": {
+  
+    "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/__mocks__/fileMock.js"
+  },
     "moduleFileExtensions": [
       "ts",
       "tsx",
