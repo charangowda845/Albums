@@ -1,29 +1,24 @@
-
 # 💿 AlbumExplorer: React Native Album and Track Browser
 
 ## 🚀 Overview
 
-AlbumExplorer is a modern cross-platform mobile application built with React Native and TypeScript. It serves as a browser for music and media, fetching data from the iTunes Search API to display albums, tracks, and other media items by a featured artist (currently "Jack Johnson").
+AlbumExplorer is a modern cross-platform mobile application built with React Native and TypeScript. It serves as a browser for music and media, fetching data from the iTunes Search API to display all results (albums, tracks, movies, etc.) by a featured artist (currently "Jack Johnson").
 
-The project focuses on implementing robust mobile navigation using `@react-navigation/native-stack`, managing asynchronous data fetching, and ensuring comprehensive unit testing coverage with Jest and custom native module mocks.
+The project focuses on implementing robust mobile navigation, managing asynchronous data fetching, and maintaining a clean, performant user interface. A significant effort was made to ensure the testing environment is correctly configured to handle native module dependencies.
 
 ## ✨ Features
 
-* **Asynchronous Data Fetching:** Retrieves search results from the iTunes API.
-* **Responsive UI:** Displays content in a clean, multi-column grid layout that adapts to different screen sizes (phones and tablets).
-* **Native Stack Navigation:** Utilizes `react-native-screens` for a performant, native look and feel for screen transitions.
-* **Track/Album Details:** Allows users to navigate from the list to a dedicated detail view for selected items.
-* **Robust Error Handling:** Implements network error and HTTP status handling in the API service.
+* **Universal Data Fetching:** Retrieves and processes all media types (Tracks, Collections, Movies, etc.) from the iTunes Search API without filtering.
+* **Responsive UI:** Displays content in a clean, multi-column grid layout that adapts to screen dimensions.
+* **Native Stack Navigation:** Utilizes `@react-navigation/native-stack` for high-performance screen transitions.
+* **Image Optimization:** Manipulates raw image URLs to fetch higher-resolution artwork.
+* **Robust Testing:** Includes unit tests for the API service and integration tests for the main navigation stack.
 
 ## 🛠️ Technologies Used
 
-The project is built on the following core technologies and libraries:
-
-* **Platform:** React Native (CLI or Expo-based).
-* **Language:** TypeScript
+* **Platform:** React Native / TypeScript
 * **Navigation:** `@react-navigation/native-stack`
-* **Styling:** `react-native` StyleSheet API, `react-native-safe-area-context`
-* **Data Fetching:** Native `fetch` API.
+* **Networking:** Native `fetch` API
 * **Testing:** Jest, React Test Renderer
 
 ## 💻 Setup and Installation
@@ -33,8 +28,7 @@ Follow these steps to set up and run the project locally.
 ### Prerequisites
 
 * Node.js (LTS version)
-* Yarn or npm
-* React Native environment setup (e.g., Xcode for iOS, Android Studio for Android)
+* React Native CLI environment setup (Xcode for iOS, Android Studio for Android)
 
 ### Installation Steps
 
@@ -47,8 +41,6 @@ Follow these steps to set up and run the project locally.
 2.  **Install Dependencies:**
     ```bash
     npm install
-    # or
-    yarn install
     ```
 
 3.  **iOS Setup (using CocoaPods):**
@@ -60,44 +52,50 @@ Follow these steps to set up and run the project locally.
 
 4.  **Run the Application:**
 
-    | Platform | Command |
-    | :--- | :--- |
-    | **iOS** | `npm run ios` |
-    | **Android** | `npm run android` |
+| Platform | Command |
+| :--- | :--- |
+| **iOS** | `npm run ios` |
+| **Android** | `npm run android` |
 
 ---
 
-## ☁️ API Service
+## 🧪 Testing Environment Setup (CRITICAL)
 
-The application fetches data from the iTunes Search API.
+Due to dependencies on native modules like `@react-native-community/netinfo` and `BackHandler`, the Jest environment requires specific mocks to run successfully. If you encounter errors like **"NativeModule is null"** or **"BackHandler is not a function"**, ensure the following configurations are in place.
 
-**Endpoint:** `https://itunes.apple.com/search?term=jack+johnson`
+### 1. Jest Mocks Directory (`__mocks__`)
 
-### `src/api/iTunesService.ts` Logic
+Create a `__mocks__` directory in the project root and add the following files to mock binary assets and native modules:
 
-The `fetchAlbums` function handles the following:
-1.  Fetches data for the term "jack johnson".
-2.  Maps all received media types (`track`, `collection`, `audiobook`, etc.) into the simplified `IAlbumListItem` structure.
-3.  Performs image URL manipulation to fetch higher-resolution artwork (`100x100bb` replaced with `600x600bb`).
+| File Path | Description | Fixes Error |
+| :--- | :--- | :--- |
+| `__mocks__/fileMock.js` | Mocks all asset files (PNG, JPG, etc.). | `SyntaxError: Invalid or unexpected token` |
+| `__mocks__/@react-native-community/netinfo.js` | Mocks NetInfo module functions. | `NativeModule.RNCNetInfo is null` |
+| `__mocks__/@react-native-async-storage/async-storage.js` | Uses the official mock for AsyncStorage. | `[@RNC/AsyncStorage]: NativeModule: AsyncStorage is null` |
 
----
+### 2. Global Setup File (`jest.setup.js`)
 
-## ✅ Running Tests (Jest)
+This file is loaded before every test suite and contains the necessary global mocks for React Navigation.
 
-The project includes unit tests for the API service (`iTunesService.test.ts`) and integration tests for the main application component (`App-test.tsx`). Running these tests requires specific Jest configuration to correctly mock React Native's native modules and assets.
+```javascript
+// jest.setup.js
 
-### 1. Jest Configuration (`package.json`)
+// 1. Mock BackHandler (Essential for @react-navigation)
+// Fixes: TypeError: _reactNative.BackHandler.addEventListener is not a function
+jest.mock('react-native/Libraries/Utilities/BackHandler', () => ({
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  exitApp: jest.fn(),
+  canExitApp: jest.fn(() => true),
+}));
 
-Ensure your `package.json` includes the necessary mapping for assets:
+// 2. Silence console.error output for test cases that are expected to throw (e.g., HTTP 404 test)
+global.console = {
+  ...global.console,
+  error: jest.fn(),
+};
 
-```json
-// package.json (partial)
-"jest": {
-    "preset": "react-native",
-    "setupFiles": [
-        "<rootDir>/jest.setup.js"
-    ],
-    "moduleNameMapper": {
-        "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/__mocks__/fileMock.js"
-    }
-}
+// 3. Optional: Mock AsyncStorage using the official utility
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
