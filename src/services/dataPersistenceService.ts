@@ -2,10 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IAlbumListItem } from '../models/Album'; 
 const ALBUMS_STORAGE_KEY = '@AlbumExplorer:jackJohnsonAlbums';
 
-
-
- * @param albums The array of IAlbumListItem to save.
- */
 export const saveAlbumsToStorage = async (albums: IAlbumListItem[]): Promise<void> => {
   try {
     const jsonValue = JSON.stringify(albums);

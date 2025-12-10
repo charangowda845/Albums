@@ -36,7 +36,7 @@ export const useAlbumData = (): IAlbumDataHook => {
       setIsLoading(false); 
       console.log('Displayed local data.');
     } else {
-      /
+      
       setIsLoading(isNetworkConnected); 
     }
 
